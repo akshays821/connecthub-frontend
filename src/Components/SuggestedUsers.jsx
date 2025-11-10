@@ -17,7 +17,7 @@ function SuggestedUsers() {
 
   const fetchSuggestedUsers = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/users/suggested', {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/users/suggested`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setUsers(response.data);
@@ -34,7 +34,7 @@ function SuggestedUsers() {
 
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/follow/${userId}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/follow/${userId}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` }

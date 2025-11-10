@@ -19,7 +19,7 @@ function Notifications() {
 
   const fetchNotifications = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/notifications', {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications(response.data);
@@ -32,7 +32,7 @@ function Notifications() {
 
   const handleMarkAllRead = async () => {
     try {
-      await axios.put('http://localhost:5000/api/notifications/read-all', {}, {
+      await axios.put(`${import.meta.env.VITE_API_BASE_URL}/api/notifications/read-all`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setNotifications(notifications.map(n => ({ ...n, isRead: true })));
@@ -46,7 +46,7 @@ function Notifications() {
     if (!notification.isRead) {
       try {
         await axios.put(
-          `http://localhost:5000/api/notifications/${notification._id}/read`,
+          `${import.meta.env.VITE_API_BASE_URL}/api/notifications/${notification._id}/read`,
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );

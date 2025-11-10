@@ -38,7 +38,7 @@ function CreatePost({ onPostCreated }) {
         formData.append('image', image);
       }
 
-      await axios.post('http://localhost:5000/api/posts', formData, {
+      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/posts`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'

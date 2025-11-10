@@ -72,7 +72,7 @@ function Navbar() {
     setSearching(true);
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/users/search?query=${searchQuery}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/users/search?query=${searchQuery}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setSearchResults(response.data);
@@ -93,7 +93,7 @@ function Navbar() {
 
   const fetchUnreadCount = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/notifications', {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/notifications`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const unread = response.data.filter(n => !n.isRead).length;
@@ -105,7 +105,7 @@ function Navbar() {
 
   const fetchUnreadMessages = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/messages/conversations', {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/messages/conversations`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       const totalUnread = response.data.reduce((sum, conv) => sum + (conv.unreadCount || 0), 0);

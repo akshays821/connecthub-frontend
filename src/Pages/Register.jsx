@@ -47,7 +47,7 @@ function Register() {
     dispatch(loginStart());
 
     try {
-      const response = await axios.post('http://localhost:5000/api/users/register', formData);
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/users/register`, formData);
 
       // Dispatch success action with token and user data
       dispatch(loginSuccess({

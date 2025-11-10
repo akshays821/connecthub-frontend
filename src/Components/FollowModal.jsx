@@ -17,8 +17,8 @@ function FollowModal({ userId, type, onClose }) {
   const fetchUsers = async () => {
     try {
       const endpoint = type === 'followers' 
-        ? `http://localhost:5000/api/follow/followers/${userId}`
-        : `http://localhost:5000/api/follow/following/${userId}`;
+        ? `${import.meta.env.VITE_API_BASE_URL}/api/follow/followers/${userId}`
+        : `${import.meta.env.VITE_API_BASE_URL}/api/follow/following/${userId}`;
 
       const response = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` }

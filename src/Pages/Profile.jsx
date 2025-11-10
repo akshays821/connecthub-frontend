@@ -45,7 +45,7 @@ function Profile() {
   const fetchProfile = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/users/profile/${username}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/users/profile/${username}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setProfile(response.data);
@@ -59,7 +59,7 @@ function Profile() {
   const fetchUserPosts = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/posts/user/${username}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/user/${username}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setPosts(response.data);
@@ -78,7 +78,7 @@ function Profile() {
     if (isOwnProfile || !profile) return;
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/follow/check/${profile.id}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/follow/check/${profile.id}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       setFollowStatus(response.data.status);
@@ -103,19 +103,19 @@ function Profile() {
           followersCount: Math.max((prev.followersCount || 1) - 1, 0),
         }));
 
-        await axios.delete(`http://localhost:5000/api/follow/${profile.id}`, {
+        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/follow/${profile.id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
       } else if (followStatus === 'pending') {
         // Optimistic update
         setFollowStatus('not_following');
 
-        await axios.delete(`http://localhost:5000/api/follow/${profile.id}`, {
+        await axios.delete(`${import.meta.env.VITE_API_BASE_URL}/api/follow/${profile.id}`, {
           headers: { Authorization: `Bearer ${token}` },
         });
       } else {
         const response = await axios.post(
-          `http://localhost:5000/api/follow/${profile.id}`,
+          `${import.meta.env.VITE_API_BASE_URL}/api/follow/${profile.id}`,
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );

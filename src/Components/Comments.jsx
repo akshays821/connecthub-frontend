@@ -20,7 +20,7 @@ function Comments({ postId }) {
   const fetchComments = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/comments/${postId}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/comments/${postId}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -42,7 +42,7 @@ function Comments({ postId }) {
 
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/comments/${postId}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/comments/${postId}`,
         { content: newComment },
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -61,7 +61,7 @@ function Comments({ postId }) {
   const handleDelete = async () => {
     try {
       await axios.delete(
-        `http://localhost:5000/api/comments/${deleteModal}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/comments/${deleteModal}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }

@@ -50,7 +50,7 @@ function EditProfileModal({ profile, onClose, onUpdate }) {
       }
 
       const response = await axios.put(
-        'http://localhost:5000/api/users/profile',
+        `${import.meta.env.VITE_API_BASE_URL}/api/users/profile`,
         formDataToSend,
         {
           headers: {

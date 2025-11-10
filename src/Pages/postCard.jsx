@@ -24,7 +24,7 @@ function PostCard({ post, onDelete, showFullComments = false }) {
   const fetchCommentPreview = async () => {
     try {
       const response = await axios.get(
-        `http://localhost:5000/api/comments/${post._id}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/comments/${post._id}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -38,7 +38,7 @@ function PostCard({ post, onDelete, showFullComments = false }) {
   const handleLike = async () => {
     try {
       const response = await axios.post(
-        `http://localhost:5000/api/posts/${post._id}/like`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/${post._id}/like`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -55,7 +55,7 @@ function PostCard({ post, onDelete, showFullComments = false }) {
   const handleDelete = async () => {
     try {
       await axios.delete(
-        `http://localhost:5000/api/posts/${post._id}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/posts/${post._id}`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }

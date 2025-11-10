@@ -18,7 +18,7 @@ function FollowRequests() {
   const fetchFollowRequests = async () => {
     try {
       const response = await axios.get(
-        'http://localhost:5000/api/follow/requests',
+        `${import.meta.env.VITE_API_BASE_URL}/api/follow/requests`,
         {
           headers: { Authorization: `Bearer ${token}` }
         }
@@ -34,7 +34,7 @@ function FollowRequests() {
  const handleAccept = async (requestId, senderId) => {
   try {
     await axios.post(
-      `http://localhost:5000/api/follow/accept/${senderId}`,
+      `${import.meta.env.VITE_API_BASE_URL}/api/follow/accept/${senderId}`,
       {},
       {
         headers: { Authorization: `Bearer ${token}` }
@@ -49,7 +49,7 @@ function FollowRequests() {
 const handleReject = async (requestId, senderId) => {
   try {
     await axios.post(
-      `http://localhost:5000/api/follow/reject/${senderId}`,
+      `${import.meta.env.VITE_API_BASE_URL}/api/follow/reject/${senderId}`,
       {},
       {
         headers: { Authorization: `Bearer ${token}` }

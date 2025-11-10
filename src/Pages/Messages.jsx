@@ -26,7 +26,7 @@ function Messages() {
     fetchConversations();
     dispatch(resetMessageCount());
 
-    const socket = io('http://localhost:5000');
+    const socket = io(`${import.meta.env.VITE_API_BASE_URL}`);
     socket.emit('register', currentUser.id);
 
     socket.on('receive-message', (message) => {
@@ -69,7 +69,7 @@ function Messages() {
 
   const fetchConversations = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/messages/conversations', {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/messages/conversations`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setConversations(response.data);
@@ -82,13 +82,13 @@ function Messages() {
 
   const fetchMessages = async (userId) => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/messages/${userId}`, {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/messages/${userId}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setMessages(response.data);
 
       await axios.put(
-        `http://localhost:5000/api/messages/read/${userId}`,
+        `${import.meta.env.VITE_API_BASE_URL}/api/messages/read/${userId}`,
         {},
         {
           headers: { Authorization: `Bearer ${token}` }
@@ -111,7 +111,7 @@ function Messages() {
 
     try {
       const response = await axios.post(
-        'http://localhost:5000/api/messages',
+        `${import.meta.env.VITE_API_BASE_URL}/api/messages`,
         {
           receiverId: activeChat._id,
           content: messageToSend
@@ -125,7 +125,7 @@ function Messages() {
       setMessages(prev => [...prev, sentMessage]);
       setNewMessage('');
 
-      const socket = io('http://localhost:5000');
+      const socket = io(`${import.meta.env.VITE_API_BASE_URL}`);
       socket.emit('send-message', {
         ...sentMessage,
         receiverId: activeChat._id
