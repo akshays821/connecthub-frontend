@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from 'react'; 
 import { useNavigate, Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginStart, loginSuccess, loginFailure } from '../Redux/Slices/authSlice';
@@ -141,7 +141,7 @@ function Register() {
         </div>
 
         {/* Google Button */}
-        <div className="flex justify-center">
+        <div className="flex flex-col items-center">
           <GoogleLogin
             onSuccess={async (credentialResponse) => {
               dispatch(loginStart());
@@ -162,6 +162,7 @@ function Register() {
               dispatch(loginFailure('Google signup failed'));
             }}
           />
+          <p className="text-gray-500 text-sm mt-3">Sign up with Google</p>
         </div>
 
         {/* Sign In Link */}
