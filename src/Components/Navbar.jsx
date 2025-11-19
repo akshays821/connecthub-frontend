@@ -1,10 +1,11 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
-import { setNotificationCount } from '../Redux/Slices/notificationSlice';
+import { setNotificationCount, incrementNotificationCount } from '../Redux/Slices/notificationSlice';
 import { logout } from '../Redux/Slices/authSlice';
-import { resetMessageCount, setMessageCount } from '../Redux/Slices/messageSlice';
+import { resetMessageCount } from '../Redux/Slices/messageSlice';
+import { getSocket } from '../socket';
 
 function Navbar() {
   const navigate = useNavigate();
@@ -14,35 +15,72 @@ function Navbar() {
   const { unreadCount } = useSelector((state) => state.notifications);
   const { unreadCount: messageUnreadCount } = useSelector((state) => state.messages);
 
-  // 🔍 Search feature states
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
   const [searching, setSearching] = useState(false);
   const searchRef = useRef(null);
 
-  // 🔔 Notifications + Messages
-  useEffect(() => {
-    fetchUnreadCount();
-    fetchUnreadMessages();
+  const NavLink = ({ to, children }) => {
+    const isActive = location.pathname === to;
 
-    const notifInterval = setInterval(fetchUnreadCount, 30000);
-    const msgInterval = setInterval(fetchUnreadMessages, 2000);
-
-    return () => {
-      clearInterval(notifInterval);
-      clearInterval(msgInterval);
+    const handleClick = () => {
+      if (isActive) {
+        window.location.reload();
+      } else {
+        navigate(to);
+      }
     };
-  }, [token]);
 
-  // Reset message badge when on messages page
+    return (
+      <button
+        onClick={handleClick}
+        className={`flex items-center gap-4 w-full px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 rounded-xl transition-all group ${
+          isActive ? 'bg-gradient-to-r from-blue-50 to-purple-50 shadow-inner' : ''
+        }`}
+      >
+        {children}
+      </button>
+    );
+  };
+
+  const fetchUnreadCount = useCallback(async () => {
+    if (!token) return;
+    try {
+      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const unread = response.data.filter(n => !n.isRead).length;
+      dispatch(setNotificationCount(unread));
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  }, [token, dispatch]);
+
+  useEffect(() => {
+    // Fetch initial counts only once
+    fetchUnreadCount();
+
+    const socket = getSocket();
+    if (socket) {
+      // Instead of incrementing, refetch the source of truth from the server.
+      // This prevents race conditions.
+      socket.on('new-notification', fetchUnreadCount);
+
+      // Cleanup on component unmount
+      return () => {
+        socket.off('new-notification', fetchUnreadCount);
+      };
+    }
+  }, [fetchUnreadCount]);
+
+  // Reset message badge when navigating TO messages page
   useEffect(() => {
     if (location.pathname === '/messages') {
       dispatch(resetMessageCount());
     }
   }, [location.pathname]);
 
-  // 🔍 Search debounce
   useEffect(() => {
     if (searchQuery.trim().length < 2) {
       setSearchResults([]);
@@ -54,7 +92,6 @@ function Navbar() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  // 🔍 Hide dropdown if clicked outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (searchRef.current && !searchRef.current.contains(e.target)) {
@@ -65,7 +102,6 @@ function Navbar() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // 🔍 Fetch search results
   const handleSearch = async () => {
     if (searchQuery.trim().length < 2) return;
 
@@ -91,30 +127,6 @@ function Navbar() {
     navigate(`/profile/${username}`);
   };
 
-  const fetchUnreadCount = async () => {
-    try {
-      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/notifications`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const unread = response.data.filter(n => !n.isRead).length;
-      dispatch(setNotificationCount(unread));
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-    }
-  };
-
-  const fetchUnreadMessages = async () => {
-    try {
-      const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/messages/conversations`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const totalUnread = response.data.reduce((sum, conv) => sum + (conv.unreadCount || 0), 0);
-      dispatch(setMessageCount(totalUnread));
-    } catch (error) {
-      console.error('Error fetching unread messages:', error);
-    }
-  };
-
   const handleLogout = () => {
     dispatch(logout());
     localStorage.removeItem('token');
@@ -122,10 +134,7 @@ function Navbar() {
     window.location.href = '/login';
   };
 
-  const handleMessagesClick = () => {
-    dispatch(resetMessageCount());
-    navigate('/messages');
-  };
+  
 
   return (
     <div className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-gray-200 p-6 flex flex-col">
@@ -133,7 +142,6 @@ function Navbar() {
         ConnectHub
       </h1>
 
-      {/* 🔍 SEARCH BAR */}
       <div ref={searchRef} className="relative mb-6">
         <div className="relative">
           <input
@@ -164,7 +172,6 @@ function Navbar() {
           )}
         </div>
 
-        {/* Results dropdown */}
         {showResults && searchResults.length > 0 && (
           <div className="absolute top-full mt-2 w-full bg-white rounded-xl shadow-xl border border-gray-200 max-h-96 overflow-y-auto z-50 animate-fade-in">
             {searchResults.map((u) => (
@@ -196,22 +203,15 @@ function Navbar() {
         )}
       </div>
 
-      {/* 🔹 NAVIGATION */}
       <nav className="space-y-2 flex-1">
-        <button
-          onClick={() => navigate('/home')}
-          className="flex items-center gap-4 w-full px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 rounded-xl transition-all group"
-        >
+        <NavLink to="/home">
           <svg className="w-6 h-6 group-hover:text-blue-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
           <span className="text-lg font-medium">Home</span>
-        </button>
+        </NavLink>
 
-        <button
-          onClick={() => navigate('/notifications')}
-          className="flex items-center gap-4 w-full px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 rounded-xl transition-all group relative"
-        >
+        <NavLink to="/notifications">
           <div className="relative">
             <svg className="w-6 h-6 group-hover:text-blue-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
@@ -223,22 +223,16 @@ function Navbar() {
             )}
           </div>
           <span className="text-lg font-medium">Notifications</span>
-        </button>
+        </NavLink>
 
-        <button
-          onClick={() => navigate('/follow-requests')}
-          className="flex items-center gap-4 w-full px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 rounded-xl transition-all group"
-        >
+        <NavLink to="/follow-requests">
           <svg className="w-6 h-6 group-hover:text-blue-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
           <span className="text-lg font-medium">Requests</span>
-        </button>
+        </NavLink>
 
-        <button
-          onClick={handleMessagesClick}
-          className="flex items-center gap-4 w-full px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 rounded-xl transition-all group"
-        >
+        <NavLink to="/messages">
           <div className="relative">
             <svg className="w-6 h-6 group-hover:text-blue-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -250,28 +244,22 @@ function Navbar() {
             )}
           </div>
           <span className="text-lg font-medium">Messages</span>
-        </button>
+        </NavLink>
 
-        <button
-          onClick={() => navigate(`/profile/${user.username}`)}
-          className="flex items-center gap-4 w-full px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 rounded-xl transition-all group"
-        >
+        <NavLink to={`/profile/${user.username}`}>
           <svg className="w-6 h-6 group-hover:text-blue-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
           <span className="text-lg font-medium">Profile</span>
-        </button>
+        </NavLink>
 
-        <button
-          onClick={() => navigate('/settings')}
-          className="flex items-center gap-4 w-full px-4 py-3 text-gray-700 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 rounded-xl transition-all group"
-        >
+        <NavLink to="/profile/settings">
           <svg className="w-6 h-6 group-hover:text-blue-600 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
           <span className="text-lg font-medium">Settings</span>
-        </button>
+        </NavLink>
       </nav>
 
       <button

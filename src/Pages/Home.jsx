@@ -1,46 +1,50 @@
 import { useState, useEffect } from 'react';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 import Navbar from '../Components/Navbar';
 import SuggestedUsers from '../Components/SuggestedUsers';
 import CreatePost from './CreatePost';
 import PostCard from './postCard';
+import { setPosts, addPost, removePost, setLoading } from '../Redux/Slices/postSlice.js';
 
 function Home() {
+  const dispatch = useDispatch();
   const { token } = useSelector((state) => state.auth);
-
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { posts, loading } = useSelector((state) => state.posts);
 
   useEffect(() => {
-    fetchPosts();
-  }, []);
+    // ✅ Only fetch if posts array is empty (prevents duplicate fetches)
+    if (posts.length === 0) {
+      fetchPosts();
+    }
+  }, []); // Remove posts from dependency
 
   const fetchPosts = async () => {
+    dispatch(setLoading(true));
     try {
       const response = await axios.get(`${import.meta.env.VITE_API_BASE_URL}/api/posts`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setPosts(response.data);
-      setLoading(false);
+      dispatch(setPosts(response.data));
     } catch (error) {
       console.error('Error fetching posts:', error);
-      setLoading(false);
+      dispatch(setLoading(false));
     }
   };
 
   const handlePostDeleted = (postId) => {
-    setPosts(posts.filter(post => post._id !== postId));
+    dispatch(removePost(postId));
+  };
+
+  const handlePostCreated = (newPost) => {
+    dispatch(addPost(newPost));
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       <Navbar />
-
-      {/* Main Content */}
       <div className="ml-64 mr-96 py-8 px-6 max-w-2xl">
-        <CreatePost onPostCreated={fetchPosts} />
-
+        <CreatePost onPostCreated={handlePostCreated} />
         {loading ? (
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -65,8 +69,6 @@ function Home() {
           </div>
         )}
       </div>
-
-      {/* Right Sidebar - Suggestions */}
       <div className="fixed right-0 top-0 w-96 h-screen overflow-y-auto p-8 bg-gradient-to-b from-white to-gray-50">
         <SuggestedUsers />
       </div>

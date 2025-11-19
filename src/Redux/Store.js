@@ -5,17 +5,19 @@ import { combineReducers } from '@reduxjs/toolkit';
 import authReducer from './Slices/authSlice';
 import notificationReducer from './Slices/notificationSlice';
 import messageReducer from './Slices/messageSlice';
+import postsReducer from './Slices/postSlice.js';
 
 const persistConfig = {
   key: 'root',
   storage,
-  whitelist: ['auth']
+  whitelist: ['auth'] // Only persist auth, not posts (posts should reload fresh)
 };
 
 const rootReducer = combineReducers({
   auth: authReducer,
   notifications: notificationReducer,
-  messages: messageReducer // NEW
+  messages: messageReducer,
+  posts: postsReducer // ADD THIS
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

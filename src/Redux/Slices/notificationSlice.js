@@ -9,6 +9,9 @@ const notificationSlice = createSlice({
     setNotificationCount: (state, action) => {
       state.unreadCount = action.payload;
     },
+    incrementNotificationCount: (state) => {
+      state.unreadCount += 1;
+    },
     decrementNotificationCount: (state) => {
       if (state.unreadCount > 0) {
         state.unreadCount -= 1;
@@ -20,5 +23,5 @@ const notificationSlice = createSlice({
   }
 });
 
-export const { setNotificationCount, decrementNotificationCount, resetNotificationCount } = notificationSlice.actions;
+export const { setNotificationCount, incrementNotificationCount, decrementNotificationCount, resetNotificationCount } = notificationSlice.actions;
 export default notificationSlice.reducer;

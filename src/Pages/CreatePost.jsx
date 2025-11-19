@@ -22,7 +22,7 @@ function CreatePost({ onPostCreated }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!content.trim()) {
       setError('Please write something');
       return;
@@ -38,18 +38,25 @@ function CreatePost({ onPostCreated }) {
         formData.append('image', image);
       }
 
-      await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/posts`, formData, {
+      // ✅ CAPTURE the created post from API response
+      const response = await axios.post(`${import.meta.env.VITE_API_BASE_URL}/api/posts`, formData, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       });
+      
 
+
+      // Reset form state
       setContent('');
       setImage(null);
       setImagePreview('');
       setShowModal(false);
-      onPostCreated();
+      
+      // ✅ PASS the new post object to Home component
+      // Home will add it to Redux store immediately (no API call needed)
+      onPostCreated(response.data);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create post');
     } finally {
