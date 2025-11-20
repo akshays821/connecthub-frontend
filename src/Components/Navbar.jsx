@@ -2,6 +2,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 import { setNotificationCount, incrementNotificationCount } from '../Redux/Slices/notificationSlice';
 import { logout } from '../Redux/Slices/authSlice';
 import { resetMessageCount } from '../Redux/Slices/messageSlice';
@@ -54,6 +55,7 @@ function Navbar() {
       dispatch(setNotificationCount(unread));
     } catch (error) {
       console.error('Error fetching notifications:', error);
+      toast.error('Could not fetch notifications.');
     }
   }, [token, dispatch]);
 
@@ -115,6 +117,7 @@ function Navbar() {
       setShowResults(true);
     } catch (err) {
       console.error('Search error:', err);
+      toast.error('Search failed. Please try again.');
     } finally {
       setSearching(false);
     }

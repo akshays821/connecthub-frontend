@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { loginSuccess } from '../Redux/Slices/authSlice';
 import axios from 'axios';
+import toast from 'react-hot-toast';
 
 function EditProfileModal({ profile, onClose, onUpdate }) {
   const { token } = useSelector((state) => state.auth);
@@ -39,40 +40,36 @@ function EditProfileModal({ profile, onClose, onUpdate }) {
     setLoading(true);
     setError('');
 
-    try {
-      const formDataToSend = new FormData();
-      formDataToSend.append('fullName', formData.fullName);
-      formDataToSend.append('bio', formData.bio);
-      formDataToSend.append('isPrivate', formData.isPrivate.toString());
-      
-      if (profilePicture) {
-        formDataToSend.append('profilePicture', profilePicture);
-      }
+    const formDataToSend = new FormData();
+    formDataToSend.append('fullName', formData.fullName);
+    formDataToSend.append('bio', formData.bio);
+    formDataToSend.append('isPrivate', formData.isPrivate.toString());
 
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_BASE_URL}/api/users/profile`,
-        formDataToSend,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
-      );
-
-      dispatch(loginSuccess({
-        token,
-        user: response.data.user
-      }));
-
-      alert('Profile updated successfully!');
-      onUpdate();
-      onClose();
-    } catch (err) {
-      console.error('Update error:', err);
-      setError(err.response?.data?.message || 'Failed to update profile');
-      setLoading(false);
+    if (profilePicture) {
+      formDataToSend.append('profilePicture', profilePicture);
     }
+
+    const updatePromise = axios.put(
+      `${import.meta.env.VITE_API_BASE_URL}/api/users/profile`,
+      formDataToSend,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    toast.promise(updatePromise, {
+      loading: 'Saving changes...',
+      success: (response) => {
+        dispatch(loginSuccess({ token, user: response.data.user }));
+        onUpdate();
+        onClose();
+        return 'Profile updated successfully!';
+      },
+      error: (err) => err.response?.data?.message || 'Failed to update profile',
+    }).finally(() => setLoading(false));
   };
 
   return (
