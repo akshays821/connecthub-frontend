@@ -2,55 +2,89 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  body {
+    @apply bg-[#030712] text-slate-100 antialiased selection:bg-violet-500/30 selection:text-violet-200 overflow-x-hidden;
+    font-family: 'Inter', sans-serif;
+  }
+}
+
 @layer utilities {
-  .animate-fade-in {
-    animation: fadeIn 0.2s ease-out;
+  .glass-panel {
+    @apply bg-black/40 backdrop-blur-xl border border-white/5 shadow-2xl;
   }
 
-  .animate-scale-in {
-    animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  .glass-card {
+    @apply bg-[#0f172a]/40 backdrop-blur-md border border-white/5 shadow-xl hover:bg-[#1e293b]/40 transition-all duration-500 hover:border-violet-500/30 hover:shadow-violet-500/10;
   }
 
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-violet-400 via-fuchsia-400 to-sky-400 animate-text-shimmer bg-[length:200%_auto];
   }
 
-  @keyframes scaleIn {
-    from {
-      opacity: 0;
-      transform: scale(0.9);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
+  .btn-premium {
+    @apply relative overflow-hidden bg-gradient-to-r from-violet-600 to-indigo-600 text-white font-semibold shadow-lg shadow-violet-500/20 hover:shadow-violet-500/40 transition-all duration-300 active:scale-95 hover:-translate-y-0.5 rounded-xl;
+  }
+
+  .btn-ghost {
+    @apply bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white transition-all duration-300 rounded-xl border border-white/5 backdrop-blur-sm;
+  }
+
+  .input-premium {
+    @apply bg-slate-900/80 border border-white/20 text-slate-100 placeholder-slate-400 focus:border-violet-500/80 focus:ring-2 focus:ring-violet-500/30 outline-none transition-all duration-300 rounded-xl;
+  }
+
+  /* Custom Scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-slate-700/50 rounded-full hover:bg-violet-500/50 transition-colors;
   }
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+/* Global Animations */
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
 }
 
-/* Custom scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+@keyframes text-shimmer {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  100% {
+    background-position: 100% 50%;
+  }
 }
 
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
+.animate-float {
+  animation: float 6s ease-in-out infinite;
 }
 
-::-webkit-scrollbar-thumb {
-  background: #cbd5e0;
-  border-radius: 4px;
+.animate-float-delayed {
+  animation: float 8s ease-in-out infinite 2s;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: #a0aec0;
+/* Hide scrollbar for clean UI but allow scroll */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }

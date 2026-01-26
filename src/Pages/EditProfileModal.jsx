@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { loginSuccess } from '../Redux/Slices/authSlice';
 import axios from 'axios';
 import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'framer-motion';
 
 function EditProfileModal({ profile, onClose, onUpdate }) {
   const { token } = useSelector((state) => state.auth);
@@ -73,46 +74,72 @@ function EditProfileModal({ profile, onClose, onUpdate }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50 px-4 animate-fade-in">
-      <div className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl animate-scale-in">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] px-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="absolute inset-0"
+        onClick={onClose}
+      />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        transition={{ type: "spring", duration: 0.5 }}
+        className="glass-panel rounded-[32px] p-8 max-w-lg w-full shadow-2xl border border-white/10 relative overflow-hidden z-10"
+      >
+        {/* Background Glow */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-violet-500/20 to-fuchsia-500/20 rounded-full blur-[100px] pointer-events-none"></div>
+
+        <div className="flex items-center justify-between mb-8 relative z-10">
+          <h2 className="text-3xl font-black bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
             Edit Profile
           </h2>
-          <button
+          <motion.button
+            whileHover={{ rotate: 90 }}
+            whileTap={{ scale: 0.9 }}
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full p-2 transition"
+            className="text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full p-2.5 transition-colors"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
-          </button>
+          </motion.button>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl mb-4 text-sm flex items-center gap-2">
-            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="bg-red-500/10 border border-red-500/20 text-red-500 px-4 py-3 rounded-xl mb-6 text-sm flex items-center gap-2 overflow-hidden">
+            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
             {error}
-          </div>
+          </motion.div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
           <div>
-            <label className="block text-gray-700 text-sm font-semibold mb-3">
+            <label className="block text-slate-300 text-sm font-bold mb-4">
               Profile Picture
             </label>
             <div className="flex items-center gap-6">
-              <img
-                src={imagePreview}
-                alt="Preview"
-                className="w-24 h-24 rounded-full object-cover ring-4 ring-blue-100"
-              />
-              <label className="cursor-pointer">
-                <div className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-2.5 rounded-xl font-medium transition-all hover:shadow-lg active:scale-95">
-                  Choose Photo
-                </div>
+              <div className="relative group">
+                <img
+                  src={imagePreview}
+                  alt="Preview"
+                  className="w-24 h-24 rounded-full object-cover ring-4 ring-[#0f172a] shadow-xl"
+                />
+                <div className="absolute inset-0 rounded-full bg-black/20 hidden group-hover:block transition-all"></div>
+              </div>
+
+              <label className="cursor-pointer group">
+                <motion.div
+                  whileHover={{ x: 5 }}
+                  className="bg-white/5 hover:bg-white/10 text-white border border-white/10 px-6 py-2.5 rounded-xl font-medium transition-all group-hover:border-white/20"
+                >
+                  Change Photo
+                </motion.div>
                 <input
                   type="file"
                   accept="image/*"
@@ -121,11 +148,10 @@ function EditProfileModal({ profile, onClose, onUpdate }) {
                 />
               </label>
             </div>
-            <p className="text-xs text-gray-400 mt-2">PNG, JPG up to 5MB</p>
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-semibold mb-2">
+            <label className="block text-slate-300 text-sm font-bold mb-2 ml-1">
               Full Name
             </label>
             <input
@@ -133,13 +159,13 @@ function EditProfileModal({ profile, onClose, onUpdate }) {
               name="fullName"
               value={formData.fullName}
               onChange={handleChange}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition"
+              className="w-full px-5 py-4 bg-[#030712]/50 border border-white/5 rounded-2xl focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all text-white placeholder-slate-400 shadow-inner"
               placeholder="Enter your full name"
             />
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-semibold mb-2">
+            <label className="block text-slate-300 text-sm font-bold mb-2 ml-1">
               Bio
             </label>
             <textarea
@@ -148,53 +174,72 @@ function EditProfileModal({ profile, onClose, onUpdate }) {
               onChange={handleChange}
               rows="3"
               maxLength="150"
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-blue-500 transition resize-none"
+              className="w-full px-5 py-4 bg-[#030712]/50 border border-white/5 rounded-2xl focus:outline-none focus:border-violet-500/50 focus:ring-1 focus:ring-violet-500/50 transition-all resize-none text-white placeholder-slate-400 shadow-inner leading-relaxed"
               placeholder="Tell us about yourself"
             />
-            <div className="flex justify-between items-center mt-1 px-1">
-              <p className="text-xs text-gray-400">Max 150 characters</p>
-              <p className={`text-xs font-medium ${formData.bio.length > 140 ? 'text-red-500' : 'text-gray-400'}`}>
+            <div className="flex justify-between items-center mt-2 px-2">
+              <p className="text-xs text-slate-500 font-medium">Max 150 characters</p>
+              <p className={`text-xs font-bold ${formData.bio.length > 140 ? 'text-red-400' : 'text-slate-500'}`}>
                 {formData.bio.length}/150
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl">
-            <input
-              type="checkbox"
-              name="isPrivate"
-              checked={formData.isPrivate}
-              onChange={handleChange}
-              className="w-5 h-5 text-blue-600 rounded focus:ring-2 focus:ring-blue-500"
-            />
-            <div className="flex-1">
-              <label className="text-gray-900 font-semibold text-sm block">
+          <motion.div
+            whileHover={{ backgroundColor: 'rgba(255, 255, 255, 0.08)' }}
+            className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5 cursor-pointer transition-colors"
+          >
+            <div className="relative flex items-center">
+              <input
+                type="checkbox"
+                name="isPrivate"
+                id="isPrivate"
+                checked={formData.isPrivate}
+                onChange={handleChange}
+                className="peer h-6 w-6 cursor-pointer appearance-none rounded-lg border border-slate-500 bg-[#030712] transition-all checked:border-violet-500 checked:bg-violet-500"
+              />
+              <svg
+                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 text-white opacity-0 peer-checked:opacity-100 pointer-events-none transition-opacity"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="3"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <label htmlFor="isPrivate" className="flex-1 cursor-pointer select-none">
+              <span className="text-white font-bold text-sm block">
                 Private Account
-              </label>
-              <p className="text-xs text-gray-500 mt-1">
+              </span>
+              <p className="text-xs text-slate-400 mt-0.5">
                 Only followers can see your posts
               </p>
-            </div>
-          </div>
+            </label>
+          </motion.div>
 
-          <div className="flex gap-3 pt-4">
-            <button
+          <div className="flex gap-4 pt-2">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold transition"
+              className="flex-1 bg-white/5 hover:bg-white/10 text-white py-3.5 rounded-xl font-bold transition-all border border-white/5"
             >
               Cancel
-            </button>
-            <button
+            </motion.button>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white py-3 rounded-xl font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition shadow-lg"
+              className="flex-1 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white py-3.5 rounded-xl font-bold shadow-lg shadow-violet-500/20 disabled:opacity-50"
             >
               {loading ? 'Saving...' : 'Save Changes'}
-            </button>
+            </motion.button>
           </div>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 }

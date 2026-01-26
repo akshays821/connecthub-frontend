@@ -1,11 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
-import Navbar from '../Components/Navbar';
+import { motion, AnimatePresence } from 'framer-motion';
+import Sidebar from '../Components/Sidebar';
 import SuggestedUsers from '../Components/SuggestedUsers';
 import CreatePost from './CreatePost';
 import PostCard from './postCard';
 import { setPosts, addPost, removePost, setLoading } from '../Redux/Slices/postSlice.js';
+
 
 function Home() {
   const dispatch = useDispatch();
@@ -13,11 +15,8 @@ function Home() {
   const { posts, loading } = useSelector((state) => state.posts);
 
   useEffect(() => {
-    // ✅ Only fetch if posts array is empty (prevents duplicate fetches)
-    if (posts.length === 0) {
-      fetchPosts();
-    }
-  }, []); // Remove posts from dependency
+    fetchPosts();
+  }, [dispatch, token]);
 
   const fetchPosts = async () => {
     dispatch(setLoading(true));
@@ -32,47 +31,100 @@ function Home() {
     }
   };
 
-  const handlePostDeleted = (postId) => {
-    dispatch(removePost(postId));
-  };
-
   const handlePostCreated = (newPost) => {
     dispatch(addPost(newPost));
   };
 
+  const handlePostDeleted = (postId) => {
+    dispatch(removePost(postId));
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
-      <Navbar />
-      <div className="ml-64 mr-96 py-8 px-6 max-w-2xl">
-        <CreatePost onPostCreated={handlePostCreated} />
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+    <div className="min-h-screen bg-[#030712] text-slate-100">
+
+      <Sidebar />
+
+      <main className="pl-32 pr-8 py-8 max-w-[1600px] mx-auto flex gap-8">
+        {/* Feed Section */}
+        <div className="flex-1 max-w-2xl mx-auto w-full">
+          {/* Header */}
+          <header className="flex items-center justify-between mb-8 sticky top-4 z-30 glass-panel rounded-2xl p-4">
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
+              For You
+            </h1>
+            <div className="flex gap-2">
+              <button className="px-4 py-1.5 rounded-lg bg-white/10 text-sm font-medium hover:bg-white/20 transition">Trending</button>
+              <button className="px-4 py-1.5 rounded-lg text-gray-400 text-sm font-medium hover:text-white transition">Latest</button>
+            </div>
+          </header>
+
+          <CreatePost onPostCreated={handlePostCreated} />
+
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="w-16 h-16 border-4 border-violet-500/30 border-t-violet-500 rounded-full animate-spin"></div>
+            </div>
+          ) : posts.length === 0 ? (
+            <div className="glass-panel p-12 text-center rounded-3xl mt-8">
+              <div className="text-6xl mb-4">✨</div>
+              <h3 className="text-xl font-bold mb-2">It's quiet here</h3>
+              <p className="text-gray-400">Be the first to post something amazing.</p>
+            </div>
+          ) : (
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.1
+                  }
+                }
+              }}
+              className="space-y-6 mt-8 pb-20"
+            >
+              <AnimatePresence mode='popLayout'>
+                {posts.map(post => (
+                  <motion.div
+                    key={post._id}
+                    layout
+                    variants={{
+                      hidden: { opacity: 0, y: 50 },
+                      visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 12 } }
+                    }}
+                    exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
+                  >
+                    <PostCard
+                      post={post}
+                      onDelete={handlePostDeleted}
+                    />
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </motion.div>
+          )}
+        </div>
+
+        {/* Right Sidebar - Suggested Users */}
+        <aside className="hidden xl:block w-96 relative">
+          <div className="sticky top-8 space-y-6">
+            <SuggestedUsers />
+
+            {/* Footer Links */}
+            <div className="flex flex-wrap gap-x-4 gap-y-2 text-xs text-gray-500 px-4">
+              <a href="#" className="hover:text-gray-300 transition">Privacy</a>
+              <a href="#" className="hover:text-gray-300 transition">Terms</a>
+              <a href="#" className="hover:text-gray-300 transition">Advertising</a>
+              <a href="#" className="hover:text-gray-300 transition">Cookies</a>
+              <span>© 2026 ConnectHub Inc.</span>
+            </div>
           </div>
-        ) : posts.length === 0 ? (
-          <div className="bg-white rounded-3xl shadow-lg p-12 text-center backdrop-blur-sm bg-opacity-90">
-            <svg className="w-24 h-24 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-            </svg>
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">No posts yet</h3>
-            <p className="text-gray-500">Be the first to share something amazing!</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            {posts.map(post => (
-              <PostCard
-                key={post._id}
-                post={post}
-                onDelete={handlePostDeleted}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-      <div className="fixed right-0 top-0 w-96 h-screen overflow-y-auto p-8 bg-gradient-to-b from-white to-gray-50">
-        <SuggestedUsers />
-      </div>
+        </aside>
+      </main>
     </div>
+
   );
 }
 
